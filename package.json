@@ -1,0 +1,22 @@
+{
+  "name": "meme-coin-chart-blast",
+  "version": "1.0.0",
+  "description": "A high-volatility, chart-based crash game inspired by meme crypto coins.",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "npx tailwindcss -i ./src/styles.css -o ./public/output.css --watch",
+    "build": "npx tailwindcss -i ./src/styles.css -o ./public/output.css --minify"
+  },
+  "keywords": [
+    "stake",
+    "crash-game",
+    "crypto",
+    "meme-coin",
+    "javascript"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "tailwindcss": "^3.4.1"
+  }
+}
