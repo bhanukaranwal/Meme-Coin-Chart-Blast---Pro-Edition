@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meme Coin Chart Blast - Pro Edition</title>
+    <!-- Tailwind CSS from CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Tone.js for Audio from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <!-- Custom CSS Styles -->
+    <style>
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background-color: #1a1a2e;
+            background-image: radial-gradient(circle at top right, #4a2e6b, transparent 40%), radial-gradient(circle at bottom left, #2e4a6b, transparent 40%);
+            color: #e0e0e0;
+        }
+        .font-pixel { 
+            font-family: 'Press Start 2P', cursive; 
+        }
+        .glass-container {
+            background: rgba(27, 27, 46, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .btn {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        .btn:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+        }
+        .btn:active {
+            transform: translateY(0) scale(1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .btn-bet { 
+            background-color: #e11d48; 
+            color: white; 
+        }
+        .btn-bet:hover { 
+            background-color: #f43f5e; 
+        }
+        .btn-cashout { 
+            background-color: #22c55e; 
+            color: white; 
+        }
+        .btn-cashout:hover { 
+            background-color: #4ade80; 
+        }
+        .btn-disabled { 
+            background-color: #4b5563; 
+            color: #9ca3af; 
+            cursor: not-allowed; 
+        }
+        .multiplier-rising { 
+            animation: pulse-green 0.5s infinite; 
+        }
+        .multiplier-crashed { 
+            animation: shake 0.5s, pulse-red 0.5s infinite; 
+        }
+        @keyframes pulse-green {
+            0%, 100% { transform: scale(1); color: #4ade80; text-shadow: 0 0 10px #4ade80; }
+            50% { transform: scale(1.15); color: #86efac; text-shadow: 0 0 20px #86efac; }
+        }
+        @keyframes pulse-red {
+            0%, 100% { transform: scale(1); color: #f87171; text-shadow: 0 0 10px #f87171; }
+            50% { transform: scale(1.15); color: #fca5a5; text-shadow: 0 0 20px #fca5a5; }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px) rotate(-2deg); }
+            75% { transform: translateX(8px) rotate(2deg); }
+        }
+        #progress-bar-inner { 
+            transition: width 0.1s linear; 
+        }
+        .history-item { 
+            transition: background-color 0.3s ease, transform 0.2s ease; 
+        }
+        .history-item:hover { 
+            background-color: rgba(255, 255, 255, 0.05); 
+            transform: scale(1.05); 
+        }
+        #coin-selector {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.7rem center;
+            background-size: 1.2em;
+        }
+        #chart-icon {
+            transition: all 0.1s linear;
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- HTML Structure -->
+    <div class="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+        <!-- Left Panel: Controls & Player Info -->
+        <div class="lg:col-span-1 glass-container p-6 flex flex-col space-y-6 order-2 lg:order-1">
+            <h1 class="font-pixel text-2xl text-center text-yellow-300">Chart Blast</h1>
+            
+            <div>
+                <label class="text-sm font-bold text-gray-400">Balance</label>
+                <div id="balance-display" class="text-3xl font-bold text-white flex items-center"></div>
+            </div>
+
+            <div>
+                <label for="coin-selector" class="text-sm font-bold text-gray-400">Select Coin</label>
+                <select id="coin-selector" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg p-3 text-lg text-white focus:ring-2 focus:ring-pink-500 focus:outline-none">
+                    <!-- Options will be added by JS -->
+                </select>
+            </div>
+
+            <div>
+                <label for="bet-amount" class="text-sm font-bold text-gray-400">Bet Amount</label>
+                <input type="number" id="bet-amount" value="10" class="w-full bg-gray-900/50 border border-gray-700 rounded-lg p-3 text-lg text-white focus:ring-2 focus:ring-pink-500 focus:outline-none">
+            </div>
+
+            <button id="action-button" class="btn w-full font-pixel text-xl p-4 rounded-lg">Place Bet</button>
+            
+            <div class="text-xs text-gray-500 text-center pt-4 border-t border-gray-700">
+                <p><strong>Provably Fair Game</strong></p>
+                <p class="truncate"><strong>Session Hash:</strong> <span id="session-hash"></span></p>
+            </div>
+        </div>
+
+        <!-- Center Panel: Game Chart -->
+        <div class="lg:col-span-3 glass-container p-4 flex flex-col items-center justify-center order-1 lg:order-2 min-h-[450px] relative">
+            <div id="multiplier" class="font-pixel text-6xl md:text-8xl text-gray-500 transition-all duration-300 z-10">1.00x</div>
+            
+            <div id="chart-container" class="w-full h-full flex items-center justify-center absolute inset-0">
+                 <div id="message-overlay" class="absolute inset-0 flex items-center justify-center z-20 bg-black/60 rounded-lg hidden">
+                    <h2 id="message-text" class="font-pixel text-2xl md:text-4xl text-white text-center p-4"></h2>
+                </div>
+                <svg id="chart-svg" class="w-full h-full" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid meet"></svg>
+            </div>
+            
+            <div class="w-full mt-auto p-2">
+                <div class="w-full bg-gray-700 rounded-full h-2.5">
+                    <div id="progress-bar-inner" class="bg-yellow-400 h-2.5 rounded-full"></div>
+                </div>
+                <p id="progress-text" class="text-center text-sm mt-1 text-gray-400"></p>
+            </div>
+        </div>
+        
+        <!-- Bottom Panel: History -->
+        <div class="lg:col-span-4 glass-container p-4 order-3">
+             <h2 class="font-pixel text-lg text-center mb-2 text-yellow-300">Recent Outcomes</h2>
+             <div id="history-list" class="flex flex-row-reverse justify-start items-center gap-2 overflow-x-auto p-2"></div>
+        </div>
+    </div>
+
+    <!-- JavaScript Game Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM ELEMENTS ---
+            const elements = {
+                balanceDisplay: document.getElementById('balance-display'),
+                betAmount: document.getElementById('bet-amount'),
+                actionButton: document.getElementById('action-button'),
+                multiplier: document.getElementById('multiplier'),
+                chartSvg: document.getElementById('chart-svg'),
+                chartContainer: document.getElementById('chart-container'),
+                historyList: document.getElementById('history-list'),
+                sessionHash: document.getElementById('session-hash'),
+                progressBarInner: document.getElementById('progress-bar-inner'),
+                progressText: document.getElementById('progress-text'),
+                messageOverlay: document.getElementById('message-overlay'),
+                messageText: document.getElementById('message-text'),
+                coinSelector: document.getElementById('coin-selector'),
+            };
+
+            // --- GAME CONFIG ---
+            const COINS = {
+                doge: { name: 'Doge', icon: '🐶', crashChance: 0.20, volatility: 1.5 },
+                shiba: { name: 'Shiba', icon: '🦊', crashChance: 0.30, volatility: 2.0 },
+                pepe: { name: 'Pepe', icon: '🐸', crashChance: 0.45, volatility: 3.5 },
+            };
+            let selectedCoin = 'doge';
+
+            // --- GAME STATE ---
+            let state = {
+                balance: 1000,
+                gameState: 'IDLE', // IDLE -> WAITING -> RISING -> CRASHED
+                currentBet: 0,
+                currentMultiplier: 1.0,
+                outcomes: [],
+                roundIndex: 0,
+                intervals: { gameLoop: null, countdown: null },
+            };
+            
+            const ROUND_DURATION_MS = 3000;
+            const WAIT_DURATION_MS = 5000;
+
+            // --- SOUNDS ---
+            const sounds = {
+                tick: new Tone.MembraneSynth().toDestination(),
+                bet: new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 } }).toDestination(),
+                win: new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.05, decay: 0.2, sustain: 0.5, release: 0.8 } }).toDestination(),
+                crash: new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.005, decay: 0.3, sustain: 0, release: 0.1 } }).toDestination(),
+            };
+            sounds.crash.volume.value = -10;
+
+            // --- PROVABLY FAIR SIMULATION ---
+            async function sha256(message) {
+                const msgBuffer = new TextEncoder().encode(message);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+
+            async function generateOutcomes() {
+                const clientSeed = "MemeCoinChartBlastPro" + Date.now();
+                const serverSeed = await sha256("stake-like-server-seed-for-memes-v2");
+                let combinedSeed = serverSeed + clientSeed;
+                state.outcomes = [];
+                
+                const coinConfig = COINS[selectedCoin];
+
+                for (let i = 0; i < 100; i++) {
+                    const roundHash = await sha256(combinedSeed + i);
+                    const hashInt = parseInt(roundHash.substring(0, 8), 16);
+                    
+                    if ((hashInt % 100) / 100 < coinConfig.crashChance) {
+                        state.outcomes.push(0.0);
+                    } else {
+                        const r = parseInt(roundHash.substring(8, 16), 16) / 0xFFFFFFFF;
+                        const multiplier = 1 / Math.pow(1 - r, 1 / coinConfig.volatility);
+                        state.outcomes.push(Math.min(multiplier, 1500.0));
+                    }
+                }
+                const outcomesString = state.outcomes.join(',');
+                elements.sessionHash.textContent = (await sha256(outcomesString)).substring(0, 32);
+            }
+
+            // --- UI UPDATE FUNCTIONS ---
+            function updateBalance() {
+                elements.balanceDisplay.innerHTML = `<img src="https://placehold.co/32x32/000000/ffffff?text=${encodeURIComponent(COINS[selectedCoin].icon)}" class="w-8 h-8 mr-2 rounded-full" alt="${COINS[selectedCoin].name} Coin"> ${state.balance.toFixed(2)}`;
+            }
+
+            function updateActionButton(text, style, disabled = false) {
+                const btn = elements.actionButton;
+                btn.textContent = text;
+                btn.disabled = disabled;
+                btn.className = `btn w-full font-pixel text-xl p-4 rounded-lg`; // Reset classes
+                if (style === 'bet') btn.classList.add('btn-bet');
+                else if (style === 'cashout') btn.classList.add('btn-cashout');
+                else btn.classList.add('btn-disabled');
+            }
+
+            function updateMultiplierDisplay(multiplier, status) {
+                elements.multiplier.textContent = `${multiplier.toFixed(2)}x`;
+                elements.multiplier.classList.remove('multiplier-rising', 'multiplier-crashed', 'text-gray-500');
+                if (status === 'rising') elements.multiplier.classList.add('multiplier-rising');
+                else if (status === 'crashed') elements.multiplier.classList.add('multiplier-crashed');
+                else elements.multiplier.classList.add('text-gray-500');
+            }
+
+            function addToHistory(multiplier) {
+                const item = document.createElement('div');
+                item.className = 'history-item flex-shrink-0 font-bold px-4 py-2 rounded-md text-center';
+                item.textContent = `${multiplier.toFixed(2)}x`;
+                if (multiplier < 1.01) item.classList.add('bg-red-500/50', 'text-red-300');
+                else if (multiplier < 10) item.classList.add('bg-blue-500/50', 'text-blue-300');
+                else item.classList.add('bg-purple-500/50', 'text-purple-300');
+                elements.historyList.prepend(item);
+                if (elements.historyList.children.length > 20) elements.historyList.lastChild.remove();
+            }
+            
+            function showMessage(text, duration = 2000) {
+                elements.messageText.textContent = text;
+                elements.messageOverlay.classList.remove('hidden');
+                setTimeout(() => elements.messageOverlay.classList.add('hidden'), duration);
+            }
+
+            // --- CHART DRAWING ---
+            function drawChart(progress) {
+                elements.chartSvg.innerHTML = '';
+                const width = 400, height = 200;
+                
+                const x2 = width * progress;
+                const y2 = height - Math.pow(progress, 2.5) * height * 0.9;
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', `M 0 ${height} Q ${x2/2} ${y2} ${x2} ${y2}`);
+                path.setAttribute('stroke', '#4ade80');
+                path.setAttribute('stroke-width', '5');
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke-linecap', 'round');
+                elements.chartSvg.appendChild(path);
+
+                // Add moving icon
+                const icon = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                icon.setAttribute('x', x2 - 10);
+                icon.setAttribute('y', y2 - 10);
+                icon.setAttribute('font-size', '24');
+                icon.setAttribute('id', 'chart-icon');
+                icon.textContent = COINS[selectedCoin].icon;
+                elements.chartSvg.appendChild(icon);
+            }
+            
+            function clearChart() { elements.chartSvg.innerHTML = ''; }
+
+            // --- GAME LOGIC ---
+            function handleAction() {
+                if (Tone.context.state !== 'running') Tone.start();
+                if (state.gameState === 'WAITING') placeBet();
+                else if (state.gameState === 'RISING') cashOut();
+            }
+
+            function placeBet() {
+                const bet = parseFloat(elements.betAmount.value);
+                if (bet > 0 && bet <= state.balance) {
+                    sounds.bet.triggerAttackRelease("C5", "8n");
+                    state.balance -= bet;
+                    updateBalance();
+                    state.currentBet = bet;
+                    updateActionButton('Bet Placed', 'disabled', true);
+                } else showMessage("Invalid Bet Amount!");
+            }
+
+            function cashOut() {
+                const winnings = state.currentBet * state.currentMultiplier;
+                sounds.win.triggerAttackRelease("C4", "8n", Tone.now());
+                sounds.win.triggerAttackRelease("G4", "8n", Tone.now() + 0.15);
+                showMessage(`Cashed out! +${winnings.toFixed(2)}`);
+                state.balance += winnings;
+                updateBalance();
+                state.currentBet = 0;
+            }
+
+            function startRound() {
+                state.gameState = 'RISING';
+                state.currentMultiplier = 1.0;
+                const crashMultiplier = state.outcomes[state.roundIndex];
+                
+                updateActionButton('Cash Out', 'cashout', state.currentBet === 0);
+                updateMultiplierDisplay(1.0, 'rising');
+
+                let startTime = Date.now();
+                state.intervals.gameLoop = setInterval(() => {
+                    const elapsedTime = Date.now() - startTime;
+                    const progress = Math.min(elapsedTime / ROUND_DURATION_MS, 1);
+                    
+                    state.currentMultiplier = Math.pow(1.015, elapsedTime / 50);
+                    drawChart(progress);
+                    updateMultiplierDisplay(state.currentMultiplier, 'rising');
+                    
+                    if (Math.random() > 0.8) sounds.tick.triggerAttackRelease("C1", "8n");
+
+                    if (crashMultiplier > 0 && state.currentMultiplier >= crashMultiplier) {
+                        endRound(crashMultiplier, 'crashed');
+                    } else if (progress >= 1) {
+                        endRound(state.currentMultiplier, 'mooned');
+                    }
+                }, 1000 / 60);
+            }
+
+            function endRound(finalMultiplier, reason) {
+                clearInterval(state.intervals.gameLoop);
+                state.gameState = 'CRASHED';
+                
+                if (reason === 'crashed') {
+                    sounds.crash.triggerAttackRelease("0.2");
+                    updateMultiplierDisplay(finalMultiplier, 'crashed');
+                    showMessage(`CRASHED @ ${finalMultiplier.toFixed(2)}x`);
+                    state.currentBet = 0;
+                } else { // Mooned
+                    if (state.currentBet > 0) {
+                        sounds.win.triggerAttackRelease("C5", "4n", Tone.now());
+                        const winnings = state.currentBet * finalMultiplier;
+                        showMessage(`MOON SHOT! +${winnings.toFixed(2)}`);
+                        state.balance += winnings;
+                        updateBalance();
+                    } else {
+                        showMessage(`MOON SHOT! ${finalMultiplier.toFixed(2)}x`);
+                    }
+                }
+
+                updateActionButton('Crashed', 'disabled', true);
+                addToHistory(finalMultiplier);
+                state.roundIndex = (state.roundIndex + 1) % state.outcomes.length;
+                
+                setTimeout(waitForNextRound, 2000);
+            }
+
+            function waitForNextRound() {
+                state.gameState = 'WAITING';
+                state.currentBet = 0;
+                clearChart();
+                updateActionButton('Place Bet', 'bet', false);
+                updateMultiplierDisplay(1.00, 'idle');
+
+                let countdown = WAIT_DURATION_MS;
+                state.intervals.countdown = setInterval(() => {
+                    countdown -= 100;
+                    elements.progressBarInner.style.width = `${(countdown / WAIT_DURATION_MS) * 100}%`;
+                    elements.progressText.textContent = `Next round in ${(countdown / 1000).toFixed(1)}s`;
+
+                    if (countdown <= 0) {
+                        clearInterval(state.intervals.countdown);
+                        startRound();
+                    }
+                }, 100);
+            }
+            
+            function handleCoinChange() {
+                selectedCoin = elements.coinSelector.value;
+                updateBalance();
+                generateOutcomes();
+                state.roundIndex = 0;
+                showMessage(`${COINS[selectedCoin].name} selected! Volatility changed.`);
+            }
+
+            // --- INITIALIZATION ---
+            async function init() {
+                // Populate coin selector
+                for (const [key, coin] of Object.entries(COINS)) {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = `${coin.icon} ${coin.name}`;
+                    elements.coinSelector.appendChild(option);
+                }
+                
+                updateActionButton('Loading...', 'disabled', true);
+                updateBalance();
+                await generateOutcomes();
+                
+                elements.actionButton.addEventListener('click', handleAction);
+                elements.coinSelector.addEventListener('change', handleCoinChange);
+                
+                waitForNextRound();
+            }
+
+            init();
+        });
+    </script>
+</body>
+</html>
